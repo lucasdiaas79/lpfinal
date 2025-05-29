@@ -1,4 +1,4 @@
-# LP Agregados - Sistema com Visual Estilo Painel Moderno (Visual 1) + Botões Pagamento Material/Frete e Cliente Pagou
+# LP Agregados - Sistema com Botões de Pagamento Frete e Material Separados
 import streamlit as st
 import pandas as pd
 import gspread
@@ -73,13 +73,17 @@ if aba == "📊 Visão Geral":
                 </div>
             """, unsafe_allow_html=True)
 
-            col1, col2, col3 = st.columns([1, 1, 2])
+            col1, col2, col3, col4 = st.columns([1, 1, 1, 2])
             if col1.button("📦 Marcar como Entregue", key=f"ent_{i}"):
                 sheet.update_cell(i+2, headers.index("entregue")+1, "sim")
                 st.success("Entrega atualizada.")
             if col2.button("🚛 Frete Pago", key=f"frete_{i}"):
                 sheet.update_cell(i+2, headers.index("pagamento frete")+1, "sim")
                 st.success("Pagamento do frete atualizado.")
-            if col3.button("💰 Cliente Pagou", key=f"cliente_{i}"):
+            if col3.button("📥 Material Pago", key=f"mat_{i}"):
                 sheet.update_cell(i+2, headers.index("pagamento material")+1, "sim")
                 st.success("Pagamento do material atualizado.")
+            if col4.button("💰 Cliente Pagou", key=f"cliente_{i}"):
+                sheet.update_cell(i+2, headers.index("pagamento material")+1, "sim")
+                sheet.update_cell(i+2, headers.index("pagamento frete")+1, "sim")
+                st.success("Cliente totalmente quitado.")
