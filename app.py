@@ -1,4 +1,4 @@
-# LP Agregados - Sistema com Visual Estilo Painel Moderno (Visual 1) + Autenticação via secrets.toml
+# LP Agregados - Sistema com Visual Estilo Painel Moderno (Visual 1) + Botões Pagamento Material/Frete e Cliente Pagou
 import streamlit as st
 import pandas as pd
 import gspread
@@ -24,19 +24,8 @@ for col in ["custo do material", "custo do frete", "preço de venda"]:
     df[col] = pd.to_numeric(df.get(col, 0), errors="coerce")
 for col in ["pagamento material", "pagamento frete", "entregue"]:
     if col not in df.columns:
-        df[col] = "não pago" if "pagamento" in col else "não"
+        df[col] = "não"
     df[col] = df[col].astype(str).str.lower()
-
-st.markdown("""
-    <style>
-    .css-1aumxhk, .css-1v3fvcr, .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-        padding-left: 2rem;
-        padding-right: 2rem;
-    }
-    </style>
-""", unsafe_allow_html=True)
 
 aba = st.sidebar.radio("Menu", [
     "📊 Visão Geral", "📋 Novo Pedido", "👥 Clientes", "💰 Financeiro", "📈 Relatórios", "⚙️ Configurações"])
@@ -46,7 +35,7 @@ if aba == "📊 Visão Geral":
 
     total_entregas = len(df)
     entregues = df["entregue"].value_counts().get("sim", 0)
-    pagos_material = df["pagamento material"].value_counts().get("pago", 0)
+    pagos_material = df["pagamento material"].value_counts().get("sim", 0)
     lucro = df["preço de venda"].sum() - (df["custo do material"].sum() + df["custo do frete"].sum())
 
     col1, col2, col3, col4 = st.columns(4)
@@ -63,13 +52,11 @@ if aba == "📊 Visão Geral":
     st.subheader("📋 Pedidos Recentes")
 
     for i, row in df.iterrows():
-        cor = "#f0f0f0"
-        if row["pagamento material"] == "pago" and row["pagamento frete"] == "pago" and row["entregue"] == "sim":
+        cor = "#fff5cc"
+        if row["pagamento material"] == "sim" and row["pagamento frete"] == "sim" and row["entregue"] == "sim":
             cor = "#e0ffe0"
-        elif row["pagamento material"] == "não pago" and row["pagamento frete"] == "não pago" and row["entregue"] == "não":
+        elif row["pagamento material"] == "não" and row["pagamento frete"] == "não" and row["entregue"] == "não":
             cor = "#ffe0e0"
-        else:
-            cor = "#fff5cc"
 
         with st.container():
             st.markdown(f"""
@@ -86,10 +73,13 @@ if aba == "📊 Visão Geral":
                 </div>
             """, unsafe_allow_html=True)
 
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns([1, 1, 2])
             if col1.button("📦 Marcar como Entregue", key=f"ent_{i}"):
                 sheet.update_cell(i+2, headers.index("entregue")+1, "sim")
                 st.success("Entrega atualizada.")
-            if col2.button("💰 Marcar Material como Pago", key=f"pagmat_{i}"):
-                sheet.update_cell(i+2, headers.index("pagamento material")+1, "pago")
-                st.success("Pagamento de material atualizado.")
+            if col2.button("🚛 Frete Pago", key=f"frete_{i}"):
+                sheet.update_cell(i+2, headers.index("pagamento frete")+1, "sim")
+                st.success("Pagamento do frete atualizado.")
+            if col3.button("💰 Cliente Pagou", key=f"cliente_{i}"):
+                sheet.update_cell(i+2, headers.index("pagamento material")+1, "sim")
+                st.success("Pagamento do material atualizado.")
