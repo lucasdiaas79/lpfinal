@@ -4,7 +4,6 @@ import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
-import matplotlib.pyplot as plt
 import plotly.express as px
 from PIL import Image
 
