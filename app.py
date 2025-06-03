@@ -101,6 +101,12 @@ def visao_geral():
                 sheet.update_cell(i+2, headers.index("cliente pagou")+1, "sim")
                 st.success("Cliente marcado como totalmente quitado.")
 
+            excluir = st.button("🗑️ Excluir Pedido", key=f"del_{i}")
+            if excluir:
+                sheet.delete_rows(i+2)
+                st.warning("Pedido excluído com sucesso.")
+                st.experimental_rerun()
+
 # Execução da aba selecionada
 if aba == "📊 Visão Geral":
     visao_geral()
