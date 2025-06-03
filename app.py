@@ -95,7 +95,7 @@ def visao_geral():
                 sheet.update_cell(linha_sheet, headers.index("cliente pagou")+1, "sim")
                 st.success("Cliente marcado como totalmente quitado.")
             if col5.button("🗑️ Excluir Pedido", key=f"excluir_{i}"):
-                if 1 < linha_sheet <= len(valores):
+                if 1 < linha_sheet <= sheet.row_count:
                     sheet.delete_row(linha_sheet)
                     st.success("Pedido excluído com sucesso.")
                     st.experimental_rerun()
