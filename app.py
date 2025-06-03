@@ -64,7 +64,7 @@ def visao_geral():
         st.session_state.confirm_delete = None
 
     for row_num, (i, row) in enumerate(df[::-1].iterrows()):
-        linha_sheet = len(valores) - row_num
+        linha_sheet = df.index[::-1][row_num] + 2
 
         with st.expander(f"👤 {row['cliente']}"):
             st.markdown(f"""
