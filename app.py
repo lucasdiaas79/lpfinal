@@ -1,6 +1,7 @@
 # LP Agregados - Sistema com Botões de Pagamento Frete e Material Separados
 import streamlit as st
 import pandas as pd
+import os
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
@@ -10,8 +11,11 @@ from PIL import Image
 st.set_page_config(page_title="LP Agregados - Dashboard", layout="wide")
 
 # Logo
-logo = Image.open("/mnt/data/Screenshot_25.png")
-st.sidebar.image(logo, use_column_width=True)
+logo = Image.open("Screenshot_25.png") if 'Screenshot_25.png' in os.listdir() else None
+if logo:
+    st.sidebar.image(logo, use_column_width=True)
+else:
+    st.sidebar.warning("Logo não encontrada.")
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 info = st.secrets["google_service_account"]
