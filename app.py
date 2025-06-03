@@ -34,7 +34,9 @@ df.columns = [col.lower().strip() for col in df.columns]
 for col in ["custo do material", "custo do frete", "preço de venda"]:
     df[col] = pd.to_numeric(df.get(col, 0), errors="coerce")
 for col in ["pagamento material", "pagamento frete", "entregue", "cliente pagou"]:
-    df[col] = df.get(col, "não").astype(str).str.lower()
+    if col not in df.columns:
+        df[col] = ["não"] * len(df)
+    df[col] = df[col].astype(str).str.lower()
 
 # Menu lateral
 aba = st.sidebar.radio("Menu", [
