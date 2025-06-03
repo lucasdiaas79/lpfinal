@@ -248,7 +248,7 @@ elif aba == "⚙️ Configurações":
                 try:
                     sheet.delete_rows(int(linha))
                     st.success("Pedido excluído com sucesso!")
-                    st.experimental_rerun()
+                    st.rerun()
                 except Exception as e:
                     st.error(f"Erro ao excluir pedido: {str(e)}")
             else:
