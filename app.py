@@ -95,9 +95,12 @@ def visao_geral():
                 sheet.update_cell(linha_sheet, headers.index("cliente pagou")+1, "sim")
                 st.success("Cliente marcado como totalmente quitado.")
             if col5.button("🗑️ Excluir Pedido", key=f"excluir_{i}"):
-                sheet.delete_row(linha_sheet)
-                st.success("Pedido excluído com sucesso.")
-                st.experimental_rerun()
+                if 1 < linha_sheet <= len(valores):
+                    sheet.delete_row(linha_sheet)
+                    st.success("Pedido excluído com sucesso.")
+                    st.experimental_rerun()
+                else:
+                    st.warning("Erro ao excluir: índice inválido na planilha.")
 
             
 
