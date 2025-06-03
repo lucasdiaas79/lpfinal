@@ -58,7 +58,7 @@ def visao_geral():
     col4.metric("📈 Lucro Estimado", f"R$ {lucro:,.2f}")
 
     st.markdown("---")
-    
+
     st.subheader("📋 Pedidos Recentes")
     for i, row in df[::-1].iterrows():
         cor = "#fff5cc"
@@ -68,13 +68,12 @@ def visao_geral():
         elif row["pagamento material"] == "não" and row["pagamento frete"] == "não" and row["entregue"] == "não":
             alerta = "❗ Pedido totalmente pendente."
             cor = "#ffe0e0"
-            cor = "#ffe0e0"
 
         with st.expander(f"👤 {row['cliente']}"):
             st.markdown(f"""
                 <div style='background-color:{cor}; padding: 0.5rem; border-radius: 10px; font-size: 0.95rem;'>
                     <div style='color: red; font-weight: bold;'>{alerta}</div>
-                    <strong>🏘️ {row['condominio']} - 📍 Lote {row['lote']}</strong><br>
+                    <strong>🏨 {row['condominio']} - 📍 Lote {row['lote']}</strong><br>
                     🚚 <i>{row['caçambeiro']} - {row['tipo de caminhão']}</i><br>
                     🧱 Material: {row['tipo de material']}<br>
                     💰 Custo Material: R$ {row['custo do material']} | 🚛 Frete: R$ {row['custo do frete']}<br>
@@ -87,19 +86,24 @@ def visao_geral():
                 </div>
             """, unsafe_allow_html=True)
 
-            col1, col2, col3, col4 = st.columns([1, 1, 1, 2])
+            col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 2, 1])
             if col1.button("📦 Marcar como Entregue", key=f"ent_{i}"):
                 sheet.update_cell(i+2, headers.index("entregue")+1, "sim")
                 st.success("Entrega atualizada.")
             if col2.button("🚛 Frete Pago", key=f"frete_{i}"):
                 sheet.update_cell(i+2, headers.index("pagamento frete")+1, "sim")
                 st.success("Pagamento do frete atualizado.")
-            if col3.button("📥 Material Pago", key=f"mat_{i}"):
+            if col3.button("📅 Material Pago", key=f"mat_{i}"):
                 sheet.update_cell(i+2, headers.index("pagamento material")+1, "sim")
                 st.success("Pagamento do material atualizado.")
             if col4.button("💰 Cliente Pagou", key=f"cliente_{i}"):
                 sheet.update_cell(i+2, headers.index("cliente pagou")+1, "sim")
                 st.success("Cliente marcado como totalmente quitado.")
+            if col5.button("🗑️ Excluir Pedido", key=f"excluir_{i}"):
+                if st.confirm(f"Deseja realmente excluir o pedido do cliente {row['cliente']}?"):
+                    sheet.delete_row(i+2)
+                    st.success("Pedido excluído com sucesso.")
+                    st.experimental_rerun()
 
 # Execução da aba selecionada
 if aba == "📊 Visão Geral":
@@ -143,66 +147,3 @@ elif aba == "📋 Novo Pedido":
             ]
             sheet.append_row(novo)
             st.success("Pedido salvo com sucesso!")
-
-elif aba == "👥 Clientes":
-    st.subheader("👥 Relatório por Cliente")
-    if 'cliente' in df.columns:
-        clientes = df.groupby('cliente').agg({
-            'preço de venda': 'sum',
-            'pagamento material': lambda x: (x == 'sim').sum(),
-            'entregue': lambda x: (x == 'sim').sum(),
-        }).rename(columns={
-            'preço de venda': 'Total Faturado',
-            'pagamento material': 'Materiais Pagos',
-            'entregue': 'Entregas Realizadas'
-        })
-        st.dataframe(clientes)
-
-elif aba == "💰 Financeiro":
-    st.subheader("💰 Painel Financeiro")
-    total_vendido = df["preço de venda"].sum()
-    total_recebido = df.loc[(df["pagamento material"] == "sim") & (df["pagamento frete"] == "sim"), "preço de venda"].sum()
-    lucro_bruto = total_vendido - (df["custo do material"].sum() + df["custo do frete"].sum())
-
-    st.metric("Total Vendido", f"R$ {total_vendido:,.2f}")
-    st.metric("Total Recebido", f"R$ {total_recebido:,.2f}")
-    st.metric("Lucro Bruto", f"R$ {lucro_bruto:,.2f}")
-
-elif aba == "📈 Relatórios":
-    st.subheader("📈 Relatórios com Filtros")
-
-    if 'tipo de material' in df.columns:
-        fig_mat = px.histogram(df, x='tipo de material', title='Volume por Tipo de Material')
-        st.plotly_chart(fig_mat, use_container_width=True)
-
-    if 'caçambeiro' in df.columns:
-        fig_cac = px.histogram(df, x='caçambeiro', title='Entregas por Caçambeiro')
-        st.plotly_chart(fig_cac, use_container_width=True)
-
-    df_pago = df[(df['pagamento material'] == 'sim') & (df['pagamento frete'] == 'sim')].copy()
-    if not df_pago.empty:
-        df_pago['lucro'] = df_pago['preço de venda'] - (df_pago['custo do material'] + df_pago['custo do frete'])
-        fig_lucro = px.bar(df_pago, x='cliente', y='lucro', title='Lucro por Cliente')
-        st.plotly_chart(fig_lucro, use_container_width=True)
-
-    st.markdown("---")
-    filtro_entregue = st.selectbox("Filtrar por entrega", ["todos", "sim", "não"])
-    filtro_pag_mat = st.selectbox("Filtrar por pagamento material", ["todos", "sim", "não"])
-    filtro_pag_frete = st.selectbox("Filtrar por pagamento frete", ["todos", "sim", "não"])
-
-    df_filtrado = df.copy()
-    if filtro_entregue != "todos":
-        df_filtrado = df_filtrado[df_filtrado["entregue"] == filtro_entregue]
-    if filtro_pag_mat != "todos":
-        df_filtrado = df_filtrado[df_filtrado["pagamento material"] == filtro_pag_mat]
-    if filtro_pag_frete != "todos":
-        df_filtrado = df_filtrado[df_filtrado["pagamento frete"] == filtro_pag_frete]
-
-    st.dataframe(df_filtrado)
-
-elif aba == "⚙️ Configurações":
-    st.subheader("⚙️ Configurações do Sistema")
-    if st.button("Zerar Planilha"):
-        sheet.clear()
-        sheet.append_row(headers)
-        st.success("Todos os dados foram apagados. Apenas o cabeçalho foi mantido.")
