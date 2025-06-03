@@ -241,11 +241,18 @@ elif aba == "⚙️ Configurações":
         if st.button("Excluir este pedido"):
             id_excluir = pedido_selecionado.split("ID: ")[-1]
             linha = encontrar_linha_por_id(sheet, id_excluir)
-            if linha:
-                sheet.delete_row(linha)
-                st.success("Pedido excluído com sucesso!")
-                st.experimental_rerun()
+            st.write(f"Tentando excluir linha: {linha} (ID: {id_excluir})")  # Log para debug
+
+            # Checagem robusta de linha válida
+            if linha and isinstance(linha, int) and linha > 1:
+                try:
+                    sheet.delete_row(int(linha))
+                    st.success("Pedido excluído com sucesso!")
+                    st.experimental_rerun()
+                except Exception as e:
+                    st.error(f"Erro ao excluir pedido: {str(e)}")
             else:
-                st.error("Não foi possível encontrar o pedido para excluir.")
+                st.error(f"Não foi possível encontrar o pedido para excluir (linha={linha}).")
     else:
         st.info("Nenhum pedido cadastrado para excluir.")
+
