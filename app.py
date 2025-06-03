@@ -103,7 +103,7 @@ def visao_geral():
                 </div>
             """, unsafe_allow_html=True)
 
-            col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 2, 1])
+            col1, col2, col3, col4 = st.columns([1, 1, 1, 2])
             if col1.button("📦 Marcar como Entregue", key=f"ent_{id_pedido}"):
                 linha = encontrar_linha_por_id(sheet, id_pedido)
                 if linha:
@@ -132,14 +132,6 @@ def visao_geral():
                     st.success("Cliente marcado como totalmente quitado.")
                 else:
                     st.error("Não foi possível encontrar esse pedido para atualizar.")
-            if col5.button("🗑️ Excluir Pedido", key=f"excluir_{id_pedido}"):
-                linha = encontrar_linha_por_id(sheet, id_pedido)
-                if linha:
-                    sheet.delete_row(linha)
-                    st.success("Pedido excluído com sucesso.")
-                    st.experimental_rerun()
-                else:
-                    st.error("Não foi possível encontrar esse pedido para excluir.")
 
 # Execução da aba selecionada
 if aba == "📊 Visão Geral":
