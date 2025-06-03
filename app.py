@@ -78,3 +78,77 @@ def visao_geral():
 # Execução da aba selecionada
 if aba == "📊 Visão Geral":
     visao_geral()
+
+elif aba == "📋 Novo Pedido":
+    st.subheader("📋 Cadastro de Novo Pedido")
+    with st.form("novo_pedido"):
+        tipo_material = st.selectbox("Tipo de Material", ["Areia Média", "Brita", "Seixo"])
+        tipo_caminhao = st.selectbox("Tipo de Caminhão", ["Toco", "Truck"])
+        cliente = st.text_input("Nome do Cliente")
+        condominio = st.text_input("Condomínio")
+        lote = st.text_input("Lote")
+        cacambeiro = st.text_input("Caçambeiro")
+        custo_material = st.number_input("Custo do Material (R$)", min_value=0.0)
+        custo_frete = st.number_input("Custo do Frete (R$)", min_value=0.0)
+        preco_venda = st.number_input("Preço de Venda (R$)", min_value=0.0)
+        entregue = st.selectbox("Entregue?", ["não", "sim"])
+        pag_mat = st.selectbox("Pagamento Material?", ["não", "sim"])
+        pag_frete = st.selectbox("Pagamento Frete?", ["não", "sim"])
+        cliente_pagou = st.selectbox("Cliente Pagou?", ["não", "sim"])
+        submitted = st.form_submit_button("Salvar Pedido")
+
+        if submitted:
+            novo = [
+                tipo_material, tipo_caminhao, cliente, condominio, lote, cacambeiro,
+                str(custo_material), str(custo_frete), str(preco_venda), entregue,
+                pag_mat, pag_frete, cliente_pagou
+            ]
+            sheet.append_row(novo)
+            st.success("Pedido salvo com sucesso!")
+
+elif aba == "👥 Clientes":
+    st.subheader("👥 Relatório por Cliente")
+    if 'cliente' in df.columns:
+        clientes = df.groupby('cliente').agg({
+            'preço de venda': 'sum',
+            'pagamento material': lambda x: (x == 'sim').sum(),
+            'entregue': lambda x: (x == 'sim').sum(),
+        }).rename(columns={
+            'preço de venda': 'Total Faturado',
+            'pagamento material': 'Materiais Pagos',
+            'entregue': 'Entregas Realizadas'
+        })
+        st.dataframe(clientes)
+
+elif aba == "💰 Financeiro":
+    st.subheader("💰 Painel Financeiro")
+    total_vendido = df["preço de venda"].sum()
+    total_recebido = df.loc[(df["pagamento material"] == "sim") & (df["pagamento frete"] == "sim"), "preço de venda"].sum()
+    lucro_bruto = total_vendido - (df["custo do material"].sum() + df["custo do frete"].sum())
+
+    st.metric("Total Vendido", f"R$ {total_vendido:,.2f}")
+    st.metric("Total Recebido", f"R$ {total_recebido:,.2f}")
+    st.metric("Lucro Bruto", f"R$ {lucro_bruto:,.2f}")
+
+elif aba == "📈 Relatórios":
+    st.subheader("📈 Relatórios com Filtros")
+    filtro_entregue = st.selectbox("Filtrar por entrega", ["todos", "sim", "não"])
+    filtro_pag_mat = st.selectbox("Filtrar por pagamento material", ["todos", "sim", "não"])
+    filtro_pag_frete = st.selectbox("Filtrar por pagamento frete", ["todos", "sim", "não"])
+
+    df_filtrado = df.copy()
+    if filtro_entregue != "todos":
+        df_filtrado = df_filtrado[df_filtrado["entregue"] == filtro_entregue]
+    if filtro_pag_mat != "todos":
+        df_filtrado = df_filtrado[df_filtrado["pagamento material"] == filtro_pag_mat]
+    if filtro_pag_frete != "todos":
+        df_filtrado = df_filtrado[df_filtrado["pagamento frete"] == filtro_pag_frete]
+
+    st.dataframe(df_filtrado)
+
+elif aba == "⚙️ Configurações":
+    st.subheader("⚙️ Configurações do Sistema")
+    if st.button("Zerar Planilha"):
+        sheet.clear()
+        sheet.append_row(headers)
+        st.success("Todos os dados foram apagados. Apenas o cabeçalho foi mantido.")
