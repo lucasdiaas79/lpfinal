@@ -4,8 +4,15 @@ import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
+import matplotlib.pyplot as plt
+import plotly.express as px
+from PIL import Image
 
 st.set_page_config(page_title="LP Agregados - Dashboard", layout="wide")
+
+# Logo
+logo = Image.open("/mnt/data/Screenshot_25.png")
+st.sidebar.image(logo, use_column_width=True)
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 info = st.secrets["google_service_account"]
@@ -49,41 +56,24 @@ if aba == "📊 Visão Geral":
         st.metric("📈 Lucro Estimado", f"R$ {lucro:,.2f}")
 
     st.markdown("---")
+    st.subheader("📊 Gráficos Interativos")
+
+    # Gráfico por tipo de material
+    if 'tipo de material' in df.columns:
+        fig_mat = px.histogram(df, x='tipo de material', title='Volume por Tipo de Material')
+        st.plotly_chart(fig_mat, use_container_width=True)
+
+    # Gráfico de entregas por caçambeiro
+    if 'caçambeiro' in df.columns:
+        fig_cac = px.histogram(df, x='caçambeiro', title='Entregas por Caçambeiro')
+        st.plotly_chart(fig_cac, use_container_width=True)
+
+    # Gráfico de lucro por cliente (apenas os que pagaram)
+    df_pago = df[(df['pagamento material'] == 'sim') & (df['pagamento frete'] == 'sim')]
+    if not df_pago.empty:
+        df_pago['lucro'] = df_pago['preço de venda'] - (df_pago['custo do material'] + df_pago['custo do frete'])
+        fig_lucro = px.bar(df_pago, x='cliente', y='lucro', title='Lucro por Cliente')
+        st.plotly_chart(fig_lucro, use_container_width=True)
+
+    st.markdown("---")
     st.subheader("📋 Pedidos Recentes")
-
-    for i, row in df.iterrows():
-        cor = "#fff5cc"
-        if row["pagamento material"] == "sim" and row["pagamento frete"] == "sim" and row["entregue"] == "sim":
-            cor = "#e0ffe0"
-        elif row["pagamento material"] == "não" and row["pagamento frete"] == "não" and row["entregue"] == "não":
-            cor = "#ffe0e0"
-
-        with st.container():
-            st.markdown(f"""
-                <div style='background-color:{cor}; padding: 1rem; border-radius: 10px; margin-bottom: 10px;'>
-                    <strong>🏘️ {row['condominio']} - 📍 Lote {row['lote']}</strong><br>
-                    🚚 <i>{row['caçambeiro']} - {row['tipo de caminhão']}</i><br>
-                    🧱 Material: {row['tipo de material']}<br>
-                    💰 Custo Material: R$ {row['custo do material']} | 🚛 Frete: R$ {row['custo do frete']}<br>
-                    💸 Preço Venda: R$ {row['preço de venda']}<br>
-                    👤 Cliente: {row['cliente']}<br>
-                    📦 Entregue: <b>{row['entregue'].capitalize()}</b> |
-                    💵 Pag. Material: <b>{row['pagamento material'].capitalize()}</b> |
-                    🚛 Pag. Frete: <b>{row['pagamento frete'].capitalize()}</b>
-                </div>
-            """, unsafe_allow_html=True)
-
-            col1, col2, col3, col4 = st.columns([1, 1, 1, 2])
-            if col1.button("📦 Marcar como Entregue", key=f"ent_{i}"):
-                sheet.update_cell(i+2, headers.index("entregue")+1, "sim")
-                st.success("Entrega atualizada.")
-            if col2.button("🚛 Frete Pago", key=f"frete_{i}"):
-                sheet.update_cell(i+2, headers.index("pagamento frete")+1, "sim")
-                st.success("Pagamento do frete atualizado.")
-            if col3.button("📥 Material Pago", key=f"mat_{i}"):
-                sheet.update_cell(i+2, headers.index("pagamento material")+1, "sim")
-                st.success("Pagamento do material atualizado.")
-            if col4.button("💰 Cliente Pagou", key=f"cliente_{i}"):
-                sheet.update_cell(i+2, headers.index("pagamento material")+1, "sim")
-                sheet.update_cell(i+2, headers.index("pagamento frete")+1, "sim")
-                st.success("Cliente totalmente quitado.")
