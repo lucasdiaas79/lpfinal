@@ -14,7 +14,7 @@ st.set_page_config(page_title="LP Agregados - Dashboard", layout="wide")
 logo_path = "Screenshot_25.png"
 if os.path.exists(logo_path):
     logo = Image.open(logo_path)
-    st.sidebar.image(logo, use_container_width=True)
+    st.sidebar.image(logo, width=150)
 else:
     st.sidebar.warning("Logo não encontrada.")
 
