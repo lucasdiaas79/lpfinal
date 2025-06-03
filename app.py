@@ -70,7 +70,7 @@ def visao_geral():
             cor = "#ffe0e0"
             cor = "#ffe0e0"
 
-        with st.expander(f"🏘️ {row['condominio']} - 📍 Lote {row['lote']}"):
+        with st.expander(f"👤 {row['cliente']}"):
             st.markdown(f"""
                 <div style='background-color:{cor}; padding: 0.5rem; border-radius: 10px; font-size: 0.95rem;'>
                     <div style='color: red; font-weight: bold;'>{alerta}</div>
@@ -108,7 +108,19 @@ if aba == "📊 Visão Geral":
 elif aba == "📋 Novo Pedido":
     st.subheader("📋 Cadastro de Novo Pedido")
     with st.form("novo_pedido"):
-        tipo_material = st.selectbox("Tipo de Material", ["Areia Média", "Brita", "Seixo"])
+        tipo_material = st.selectbox("Tipo de Material", [
+            "Areia Média Branca",
+            "Areia Grossa",
+            "Areia Grossa Amarela",
+            "Arenoso",
+            "Aterro",
+            "Brita 0",
+            "Brita 3/4",
+            "Brita 3/8",
+            "Brita 1",
+            "Pedra",
+            "Seixo"
+        ])
         tipo_caminhao = st.selectbox("Tipo de Caminhão", ["Toco", "Truck"])
         cliente = st.text_input("Nome do Cliente")
         condominio = st.text_input("Condomínio")
