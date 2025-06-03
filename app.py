@@ -30,6 +30,21 @@ df = pd.DataFrame(dados, columns=headers)
 # Normalização de colunas
 df.columns = [col.lower().strip() for col in df.columns]
 
+# Adicionando campo de ID único (se não existir)
+if "id_pedido" not in df.columns:
+    import uuid
+    ids = [str(uuid.uuid4()) for _ in range(len(df))]
+    df.insert(0, "id_pedido", ids)
+    # Atualiza o Google Sheets com o ID
+    sheet.clear()
+    sheet.append_row(["id_pedido"] + headers)
+    for i, row in df.iterrows():
+        sheet.append_row([row["id_pedido"]] + list(row[1:]))
+    valores = sheet.get_all_values()
+    headers, dados = valores[0], valores[1:]
+    df = pd.DataFrame(dados, columns=headers)
+    df.columns = [col.lower().strip() for col in df.columns]
+
 # Conversões e validações
 for col in ["custo do material", "custo do frete", "preço de venda"]:
     df[col] = pd.to_numeric(df.get(col, 0), errors="coerce")
@@ -37,6 +52,14 @@ for col in ["pagamento material", "pagamento frete", "entregue", "cliente pagou"
     if col not in df.columns:
         df[col] = ["não"] * len(df)
     df[col] = df[col].astype(str).str.lower()
+
+# Função para encontrar a linha do pedido pelo ID
+def encontrar_linha_por_id(sheet, id_pedido):
+    valores = sheet.get_all_values()
+    for idx, row in enumerate(valores[1:], start=2):  # começa do 2 por causa do cabeçalho
+        if row[0] == id_pedido:
+            return idx
+    return None
 
 # Menu lateral
 aba = st.sidebar.radio("Menu", [
@@ -63,9 +86,8 @@ def visao_geral():
     if "confirm_delete" not in st.session_state:
         st.session_state.confirm_delete = None
 
-    for row_num, (i, row) in enumerate(df[::-1].iterrows()):
-        linha_sheet = len(valores) - row_num
-
+    for i, row in df[::-1].iterrows():
+        id_pedido = row["id_pedido"]
         with st.expander(f"👤 {row['cliente']}"):
             st.markdown(f"""
                 <div style='background-color:#f9f9f9; padding: 0.5rem; border-radius: 10px; font-size: 0.95rem;'>
@@ -82,24 +104,32 @@ def visao_geral():
             """, unsafe_allow_html=True)
 
             col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 2, 1])
-            if col1.button("📦 Marcar como Entregue", key=f"ent_{i}"):
-                sheet.update_cell(linha_sheet, headers.index("entregue")+1, "sim")
-                st.success("Entrega atualizada.")
-            if col2.button("🚛 Frete Pago", key=f"frete_{i}"):
-                sheet.update_cell(linha_sheet, headers.index("pagamento frete")+1, "sim")
-                st.success("Pagamento do frete atualizado.")
-            if col3.button("📥 Material Pago", key=f"mat_{i}"):
-                sheet.update_cell(linha_sheet, headers.index("pagamento material")+1, "sim")
-                st.success("Pagamento do material atualizado.")
-            if col4.button("💰 Cliente Pagou", key=f"cliente_{i}"):
-                sheet.update_cell(linha_sheet, headers.index("cliente pagou")+1, "sim")
-                st.success("Cliente marcado como totalmente quitado.")
-            if col5.button("🗑️ Excluir Pedido", key=f"excluir_{i}"):
-                sheet.delete_row(linha_sheet)
-                st.success("Pedido excluído com sucesso.")
-                st.experimental_rerun()
-
-            
+            if col1.button("📦 Marcar como Entregue", key=f"ent_{id_pedido}"):
+                linha = encontrar_linha_por_id(sheet, id_pedido)
+                if linha:
+                    sheet.update_cell(linha, headers.index("entregue")+1, "sim")
+                    st.success("Entrega atualizada.")
+            if col2.button("🚛 Frete Pago", key=f"frete_{id_pedido}"):
+                linha = encontrar_linha_por_id(sheet, id_pedido)
+                if linha:
+                    sheet.update_cell(linha, headers.index("pagamento frete")+1, "sim")
+                    st.success("Pagamento do frete atualizado.")
+            if col3.button("📥 Material Pago", key=f"mat_{id_pedido}"):
+                linha = encontrar_linha_por_id(sheet, id_pedido)
+                if linha:
+                    sheet.update_cell(linha, headers.index("pagamento material")+1, "sim")
+                    st.success("Pagamento do material atualizado.")
+            if col4.button("💰 Cliente Pagou", key=f"cliente_{id_pedido}"):
+                linha = encontrar_linha_por_id(sheet, id_pedido)
+                if linha:
+                    sheet.update_cell(linha, headers.index("cliente pagou")+1, "sim")
+                    st.success("Cliente marcado como totalmente quitado.")
+            if col5.button("🗑️ Excluir Pedido", key=f"excluir_{id_pedido}"):
+                linha = encontrar_linha_por_id(sheet, id_pedido)
+                if linha:
+                    sheet.delete_row(linha)
+                    st.success("Pedido excluído com sucesso.")
+                    st.experimental_rerun()
 
 # Execução da aba selecionada
 if aba == "📊 Visão Geral":
@@ -127,11 +157,11 @@ elif aba == "📋 Novo Pedido":
         submitted = st.form_submit_button("Salvar Pedido")
 
         if submitted:
-            novo = [
-                tipo_material, tipo_caminhao, cliente, condominio, lote, cacambeiro,
+            import uuid
+            id_pedido = str(uuid.uuid4())
+            novo = [id_pedido, tipo_material, tipo_caminhao, cliente, condominio, lote, cacambeiro,
                 str(custo_material), str(custo_frete), str(preco_venda), entregue,
-                pag_mat, pag_frete, cliente_pagou
-            ]
+                pag_mat, pag_frete, cliente_pagou]
             sheet.append_row(novo)
             st.success("Pedido salvo com sucesso!")
 
@@ -199,5 +229,5 @@ elif aba == "⚙️ Configurações":
     st.subheader("⚙️ Configurações do Sistema")
     if st.button("Zerar Planilha"):
         sheet.clear()
-        sheet.append_row(headers)
+        sheet.append_row([col for col in df.columns])
         st.success("Todos os dados foram apagados. Apenas o cabeçalho foi mantido.")
