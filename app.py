@@ -70,9 +70,9 @@ def visao_geral():
             cor = "#ffe0e0"
             cor = "#ffe0e0"
 
-        with st.container():
+        with st.expander(f"🏘️ {row['condominio']} - 📍 Lote {row['lote']}"):
             st.markdown(f"""
-                <div style='background-color:{cor}; padding: 1rem; border-radius: 10px; margin-bottom: 10px;'>
+                <div style='background-color:{cor}; padding: 0.5rem; border-radius: 10px; font-size: 0.95rem;'>
                     <div style='color: red; font-weight: bold;'>{alerta}</div>
                     <strong>🏘️ {row['condominio']} - 📍 Lote {row['lote']}</strong><br>
                     🚚 <i>{row['caçambeiro']} - {row['tipo de caminhão']}</i><br>
