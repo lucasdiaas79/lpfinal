@@ -60,23 +60,28 @@ def visao_geral():
     st.subheader("📋 Pedidos Recentes")
     for i, row in df.iterrows():
         cor = "#fff5cc"
-        if row["pagamento material"] == "sim" and row["pagamento frete"] == "sim" and row["entregue"] == "sim":
+        alerta = ""
+        if row["cliente pagou"] == "sim":
             cor = "#e0ffe0"
         elif row["pagamento material"] == "não" and row["pagamento frete"] == "não" and row["entregue"] == "não":
+            alerta = "❗ Pedido totalmente pendente."
+            cor = "#ffe0e0"
             cor = "#ffe0e0"
 
         with st.container():
             st.markdown(f"""
                 <div style='background-color:{cor}; padding: 1rem; border-radius: 10px; margin-bottom: 10px;'>
+                    <div style='color: red; font-weight: bold;'>{alerta}</div>
                     <strong>🏘️ {row['condominio']} - 📍 Lote {row['lote']}</strong><br>
                     🚚 <i>{row['caçambeiro']} - {row['tipo de caminhão']}</i><br>
                     🧱 Material: {row['tipo de material']}<br>
                     💰 Custo Material: R$ {row['custo do material']} | 🚛 Frete: R$ {row['custo do frete']}<br>
                     💸 Preço Venda: R$ {row['preço de venda']}<br>
                     👤 Cliente: {row['cliente']}<br>
-                    📦 Entregue: <b>{row['entregue'].capitalize()}</b> |
-                    💵 Pag. Material: <b>{row['pagamento material'].capitalize()}</b> |
-                    🚛 Pag. Frete: <b>{row['pagamento frete'].capitalize()}</b>
+                    📦 Entregue: <b>{row['entregue'].capitalize()} ✅</b> |
+                    💵 Pag. Material: <b>{row['pagamento material'].capitalize()} ✅</b> |
+                    🚛 Pag. Frete: <b>{row['pagamento frete'].capitalize()} ✅</b> |
+                    💰 Cliente Pagou: <b>{row['cliente pagou'].capitalize()} ✅</b>
                 </div>
             """, unsafe_allow_html=True)
 
@@ -91,9 +96,8 @@ def visao_geral():
                 sheet.update_cell(i+2, headers.index("pagamento material")+1, "sim")
                 st.success("Pagamento do material atualizado.")
             if col4.button("💰 Cliente Pagou", key=f"cliente_{i}"):
-                sheet.update_cell(i+2, headers.index("pagamento material")+1, "sim")
-                sheet.update_cell(i+2, headers.index("pagamento frete")+1, "sim")
-                st.success("Cliente totalmente quitado.")
+                sheet.update_cell(i+2, headers.index("cliente pagou")+1, "sim")
+                st.success("Cliente marcado como totalmente quitado.")
 
 # Execução da aba selecionada
 if aba == "📊 Visão Geral":
