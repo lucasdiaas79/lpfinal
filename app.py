@@ -63,8 +63,8 @@ def visao_geral():
     if "confirm_delete" not in st.session_state:
         st.session_state.confirm_delete = None
 
-    for i, row in df[::-1].iterrows():
-        linha_sheet = len(df) - i + 1  # Posição correta da linha no Google Sheets
+    for row_num, (i, row) in enumerate(df[::-1].iterrows()):
+        linha_sheet = len(df) - row_num + 1  # Corrigido: posição real da linha no Google Sheetslen(df) - i + 1  # Posição correta da linha no Google Sheets
         cor = "#fff5cc"
         alerta = ""
         if row["cliente pagou"] == "sim":
