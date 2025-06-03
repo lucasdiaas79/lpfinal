@@ -79,7 +79,7 @@ def visao_geral():
                 </div>
             """, unsafe_allow_html=True)
 
-            col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 2, 1])
+            col1, col2, col3, col4 = st.columns([1, 1, 1, 2])
             if col1.button("📦 Marcar como Entregue", key=f"ent_{i}"):
                 sheet.update_cell(linha_sheet, headers.index("entregue")+1, "sim")
                 st.success("Entrega atualizada.")
@@ -92,13 +92,6 @@ def visao_geral():
             if col4.button("💰 Cliente Pagou", key=f"cliente_{i}"):
                 sheet.update_cell(linha_sheet, headers.index("cliente pagou")+1, "sim")
                 st.success("Cliente marcado como totalmente quitado.")
-            if col5.button("🗑️ Excluir Pedido", key=f"excluir_{i}"):
-                if 1 < linha_sheet <= sheet.row_count:
-                    sheet.delete_row(linha_sheet)
-                    st.success("Pedido excluído com sucesso.")
-                    st.experimental_rerun()
-                else:
-                    st.warning("Erro ao excluir: índice inválido na planilha.")
 
 # Aba: Novo Pedido
 def novo_pedido():
