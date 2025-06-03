@@ -233,3 +233,19 @@ elif aba == "⚙️ Configurações":
         sheet.clear()
         sheet.append_row([col for col in df.columns])
         st.success("Todos os dados foram apagados. Apenas o cabeçalho foi mantido.")
+
+    st.markdown("### Excluir Pedido Específico")
+    if len(df) > 0:
+        pedidos_opcoes = df.apply(lambda row: f"{row['cliente']} - Lote {row['lote']} - ID: {row['id_pedido']}", axis=1)
+        pedido_selecionado = st.selectbox("Selecione o pedido para excluir", pedidos_opcoes)
+        if st.button("Excluir este pedido"):
+            id_excluir = pedido_selecionado.split("ID: ")[-1]
+            linha = encontrar_linha_por_id(sheet, id_excluir)
+            if linha:
+                sheet.delete_row(linha)
+                st.success("Pedido excluído com sucesso!")
+                st.experimental_rerun()
+            else:
+                st.error("Não foi possível encontrar o pedido para excluir.")
+    else:
+        st.info("Nenhum pedido cadastrado para excluir.")
