@@ -10,37 +10,38 @@ from PIL import Image
 
 st.set_page_config(page_title="LP Agregados - Dashboard", layout="wide")
 
-# Logo
-logo = Image.open("Screenshot_25.png") if 'Screenshot_25.png' in os.listdir() else None
-if logo:
-    st.sidebar.image(logo, use_column_width=True)
+# Logo condicional
+logo_path = "Screenshot_25.png"
+if os.path.exists(logo_path):
+    logo = Image.open(logo_path)
+    st.sidebar.image(logo, use_container_width=True)
 else:
     st.sidebar.warning("Logo não encontrada.")
 
+# Autorização e leitura dos dados
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-info = st.secrets["google_service_account"]
-creds = Credentials.from_service_account_info(info, scopes=SCOPES)
+creds = Credentials.from_service_account_info(st.secrets["google_service_account"], scopes=SCOPES)
 client = gspread.authorize(creds)
-
-SHEET_ID = "1bL_DHWIS8Su5wGIoXCSFUUGhxnjkgrvNbsE_FLZVVNc"
-sheet = client.open_by_key(SHEET_ID).sheet1
+sheet = client.open_by_key("1bL_DHWIS8Su5wGIoXCSFUUGhxnjkgrvNbsE_FLZVVNc").sheet1
 valores = sheet.get_all_values()
-headers = valores[0]
-dados = valores[1:]
+headers, dados = valores[0], valores[1:]
 df = pd.DataFrame(dados, columns=headers)
 
+# Normalização de colunas
 df.columns = [col.lower().strip() for col in df.columns]
+
+# Conversões e validações
 for col in ["custo do material", "custo do frete", "preço de venda"]:
     df[col] = pd.to_numeric(df.get(col, 0), errors="coerce")
 for col in ["pagamento material", "pagamento frete", "entregue"]:
-    if col not in df.columns:
-        df[col] = "não"
-    df[col] = df[col].astype(str).str.lower()
+    df[col] = df.get(col, "não").astype(str).str.lower()
 
+# Menu lateral
 aba = st.sidebar.radio("Menu", [
     "📊 Visão Geral", "📋 Novo Pedido", "👥 Clientes", "💰 Financeiro", "📈 Relatórios", "⚙️ Configurações"])
 
-if aba == "📊 Visão Geral":
+# Aba: Visão Geral
+def visao_geral():
     st.subheader("📊 Visão Geral do Sistema")
 
     total_entregas = len(df)
@@ -49,30 +50,23 @@ if aba == "📊 Visão Geral":
     lucro = df["preço de venda"].sum() - (df["custo do material"].sum() + df["custo do frete"].sum())
 
     col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("🚚 Entregas Totais", total_entregas)
-    with col2:
-        st.metric("📦 Entregues", entregues)
-    with col3:
-        st.metric("💵 Materiais Pagos", pagos_material)
-    with col4:
-        st.metric("📈 Lucro Estimado", f"R$ {lucro:,.2f}")
+    col1.metric("🚚 Entregas Totais", total_entregas)
+    col2.metric("📦 Entregues", entregues)
+    col3.metric("💵 Materiais Pagos", pagos_material)
+    col4.metric("📈 Lucro Estimado", f"R$ {lucro:,.2f}")
 
     st.markdown("---")
     st.subheader("📊 Gráficos Interativos")
 
-    # Gráfico por tipo de material
     if 'tipo de material' in df.columns:
         fig_mat = px.histogram(df, x='tipo de material', title='Volume por Tipo de Material')
         st.plotly_chart(fig_mat, use_container_width=True)
 
-    # Gráfico de entregas por caçambeiro
     if 'caçambeiro' in df.columns:
         fig_cac = px.histogram(df, x='caçambeiro', title='Entregas por Caçambeiro')
         st.plotly_chart(fig_cac, use_container_width=True)
 
-    # Gráfico de lucro por cliente (apenas os que pagaram)
-    df_pago = df[(df['pagamento material'] == 'sim') & (df['pagamento frete'] == 'sim')]
+    df_pago = df[(df['pagamento material'] == 'sim') & (df['pagamento frete'] == 'sim')].copy()
     if not df_pago.empty:
         df_pago['lucro'] = df_pago['preço de venda'] - (df_pago['custo do material'] + df_pago['custo do frete'])
         fig_lucro = px.bar(df_pago, x='cliente', y='lucro', title='Lucro por Cliente')
@@ -80,3 +74,7 @@ if aba == "📊 Visão Geral":
 
     st.markdown("---")
     st.subheader("📋 Pedidos Recentes")
+
+# Execução da aba selecionada
+if aba == "📊 Visão Geral":
+    visao_geral()
