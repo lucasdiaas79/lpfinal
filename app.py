@@ -44,13 +44,97 @@ aba = st.sidebar.radio("Menu", [
 
 # Aba: Visão Geral
 def visao_geral():
-    ...  # já implementado anteriormente
+    st.subheader("📊 Visão Geral do Sistema")
+
+    total_entregas = len(df)
+    entregues = df["entregue"].value_counts().get("sim", 0)
+    pagos_material = df["pagamento material"].value_counts().get("sim", 0)
+    lucro = df["preço de venda"].sum() - (df["custo do material"].sum() + df["custo do frete"].sum())
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("🚚 Entregas Totais", total_entregas)
+    col2.metric("📦 Entregues", entregues)
+    col3.metric("💵 Materiais Pagos", pagos_material)
+    col4.metric("📈 Lucro Estimado", f"R$ {lucro:,.2f}")
+
+    st.markdown("---")
+    st.subheader("📋 Pedidos Recentes")
+
+    df_view = df[::-1].reset_index(drop=True)
+    for i, row in df_view.iterrows():
+        linha_sheet = len(df) - i + 1
+
+        with st.expander(f"👤 {row['cliente']}"):
+            st.markdown(f"""
+                <div style='background-color:#f9f9f9; padding: 0.5rem; border-radius: 10px; font-size: 0.95rem;'>
+                    <strong>🏘️ {row['condominio']} - 📍 Lote {row['lote']}</strong><br>
+                    🚛 <i>{row['caçambeiro']} - {row['tipo de caminhão']}</i><br>
+                    🧱 Material: {row['tipo de material']}<br>
+                    💰 Custo Material: R$ {row['custo do material']} | 🚛 Frete: R$ {row['custo do frete']}<br>
+                    💸 Preço Venda: R$ {row['preço de venda']}<br>
+                    📦 Entregue: {row['entregue']} |
+                    💵 Pag. Material: {row['pagamento material']} |
+                    🚛 Pag. Frete: {row['pagamento frete']} |
+                    💰 Cliente Pagou: {row['cliente pagou']}
+                </div>
+            """, unsafe_allow_html=True)
+
+            col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 2, 1])
+            if col1.button("📦 Marcar como Entregue", key=f"ent_{i}"):
+                sheet.update_cell(linha_sheet, headers.index("entregue")+1, "sim")
+                st.success("Entrega atualizada.")
+            if col2.button("🚛 Frete Pago", key=f"frete_{i}"):
+                sheet.update_cell(linha_sheet, headers.index("pagamento frete")+1, "sim")
+                st.success("Pagamento do frete atualizado.")
+            if col3.button("📥 Material Pago", key=f"mat_{i}"):
+                sheet.update_cell(linha_sheet, headers.index("pagamento material")+1, "sim")
+                st.success("Pagamento do material atualizado.")
+            if col4.button("💰 Cliente Pagou", key=f"cliente_{i}"):
+                sheet.update_cell(linha_sheet, headers.index("cliente pagou")+1, "sim")
+                st.success("Cliente marcado como totalmente quitado.")
+            if col5.button("🗑️ Excluir Pedido", key=f"excluir_{i}"):
+                if 1 < linha_sheet <= sheet.row_count:
+                    sheet.delete_row(linha_sheet)
+                    st.success("Pedido excluído com sucesso.")
+                    st.experimental_rerun()
+                else:
+                    st.warning("Erro ao excluir: índice inválido na planilha.")
+
+# Aba: Novo Pedido
+def novo_pedido():
+    st.subheader("📋 Cadastro de Novo Pedido")
+    with st.form("novo_pedido"):
+        tipo_material = st.selectbox("Tipo de Material", [
+            "Areia Média Branca", "Areia Grossa", "Areia Grossa Amarela", "Arenoso", "Aterro",
+            "Brita 0", "Brita 3/4", "Brita 3/8", "Brita 1", "Pedra", "Seixo"])
+        tipo_caminhao = st.selectbox("Tipo de Caminhão", ["Toco", "Truck"])
+        cliente = st.text_input("Nome do Cliente")
+        condominio = st.text_input("Condomínio")
+        lote = st.text_input("Lote")
+        cacambeiro = st.text_input("Caçambeiro")
+        custo_material = st.number_input("Custo do Material (R$)", min_value=0.0)
+        custo_frete = st.number_input("Custo do Frete (R$)", min_value=0.0)
+        preco_venda = st.number_input("Preço de Venda (R$)", min_value=0.0)
+        entregue = st.selectbox("Entregue?", ["não", "sim"])
+        pag_mat = st.selectbox("Pagamento Material?", ["não", "sim"])
+        pag_frete = st.selectbox("Pagamento Frete?", ["não", "sim"])
+        cliente_pagou = st.selectbox("Cliente Pagou?", ["não", "sim"])
+        submitted = st.form_submit_button("Salvar Pedido")
+
+        if submitted:
+            novo = [
+                tipo_material, tipo_caminhao, cliente, condominio, lote, cacambeiro,
+                str(custo_material), str(custo_frete), str(preco_venda), entregue,
+                pag_mat, pag_frete, cliente_pagou
+            ]
+            sheet.append_row(novo)
+            st.success("Pedido salvo com sucesso!")
 
 # Execução da aba selecionada
 if aba == "📊 Visão Geral":
     visao_geral()
 elif aba == "📋 Novo Pedido":
-    ...  # já implementado anteriormente
+    novo_pedido()
 elif aba == "👥 Clientes":
     st.subheader("👥 Relatório por Cliente")
     if 'cliente' in df.columns:
