@@ -57,7 +57,7 @@ for col in ["pagamento material", "pagamento frete", "entregue", "cliente pagou"
 def encontrar_linha_por_id(sheet, id_pedido):
     valores = sheet.get_all_values()
     for idx, row in enumerate(valores[1:], start=2):  # começa do 2 por causa do cabeçalho
-        if row[0] == id_pedido:
+        if len(row) > 0 and row[0] == id_pedido:
             return idx
     return None
 
@@ -109,27 +109,37 @@ def visao_geral():
                 if linha:
                     sheet.update_cell(linha, headers.index("entregue")+1, "sim")
                     st.success("Entrega atualizada.")
+                else:
+                    st.error("Não foi possível encontrar esse pedido para atualizar.")
             if col2.button("🚛 Frete Pago", key=f"frete_{id_pedido}"):
                 linha = encontrar_linha_por_id(sheet, id_pedido)
                 if linha:
                     sheet.update_cell(linha, headers.index("pagamento frete")+1, "sim")
                     st.success("Pagamento do frete atualizado.")
+                else:
+                    st.error("Não foi possível encontrar esse pedido para atualizar.")
             if col3.button("📥 Material Pago", key=f"mat_{id_pedido}"):
                 linha = encontrar_linha_por_id(sheet, id_pedido)
                 if linha:
                     sheet.update_cell(linha, headers.index("pagamento material")+1, "sim")
                     st.success("Pagamento do material atualizado.")
+                else:
+                    st.error("Não foi possível encontrar esse pedido para atualizar.")
             if col4.button("💰 Cliente Pagou", key=f"cliente_{id_pedido}"):
                 linha = encontrar_linha_por_id(sheet, id_pedido)
                 if linha:
                     sheet.update_cell(linha, headers.index("cliente pagou")+1, "sim")
                     st.success("Cliente marcado como totalmente quitado.")
+                else:
+                    st.error("Não foi possível encontrar esse pedido para atualizar.")
             if col5.button("🗑️ Excluir Pedido", key=f"excluir_{id_pedido}"):
                 linha = encontrar_linha_por_id(sheet, id_pedido)
                 if linha:
                     sheet.delete_row(linha)
                     st.success("Pedido excluído com sucesso.")
                     st.experimental_rerun()
+                else:
+                    st.error("Não foi possível encontrar esse pedido para excluir.")
 
 # Execução da aba selecionada
 if aba == "📊 Visão Geral":
