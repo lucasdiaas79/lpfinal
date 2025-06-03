@@ -60,7 +60,11 @@ def visao_geral():
     st.markdown("---")
 
     st.subheader("📋 Pedidos Recentes")
+    if "confirm_delete" not in st.session_state:
+        st.session_state.confirm_delete = None
+
     for i, row in df[::-1].iterrows():
+        linha_sheet = len(df) - i + 1  # Posição correta da linha no Google Sheets
         cor = "#fff5cc"
         alerta = ""
         if row["cliente pagou"] == "sim":
@@ -88,22 +92,30 @@ def visao_geral():
 
             col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 2, 1])
             if col1.button("📦 Marcar como Entregue", key=f"ent_{i}"):
-                sheet.update_cell(i+2, headers.index("entregue")+1, "sim")
+                sheet.update_cell(linha_sheet, headers.index("entregue")+1, "sim")
                 st.success("Entrega atualizada.")
             if col2.button("🚛 Frete Pago", key=f"frete_{i}"):
-                sheet.update_cell(i+2, headers.index("pagamento frete")+1, "sim")
+                sheet.update_cell(linha_sheet, headers.index("pagamento frete")+1, "sim")
                 st.success("Pagamento do frete atualizado.")
             if col3.button("📅 Material Pago", key=f"mat_{i}"):
-                sheet.update_cell(i+2, headers.index("pagamento material")+1, "sim")
+                sheet.update_cell(linha_sheet, headers.index("pagamento material")+1, "sim")
                 st.success("Pagamento do material atualizado.")
             if col4.button("💰 Cliente Pagou", key=f"cliente_{i}"):
-                sheet.update_cell(i+2, headers.index("cliente pagou")+1, "sim")
+                sheet.update_cell(linha_sheet, headers.index("cliente pagou")+1, "sim")
                 st.success("Cliente marcado como totalmente quitado.")
             if col5.button("🗑️ Excluir Pedido", key=f"excluir_{i}"):
-                if st.confirm(f"Deseja realmente excluir o pedido do cliente {row['cliente']}?"):
-                    sheet.delete_row(i+2)
+                st.session_state.confirm_delete = linha_sheet
+
+            if st.session_state.confirm_delete == linha_sheet:
+                st.warning(f"Deseja realmente excluir o pedido de {row['cliente']}?")
+                confirm_col1, confirm_col2 = st.columns([1, 1])
+                if confirm_col1.button("✅ Sim, excluir", key=f"confirm_{i}"):
+                    sheet.delete_row(linha_sheet)
                     st.success("Pedido excluído com sucesso.")
+                    st.session_state.confirm_delete = None
                     st.experimental_rerun()
+                if confirm_col2.button("❌ Cancelar", key=f"cancel_{i}"):
+                    st.session_state.confirm_delete = None
 
 # Execução da aba selecionada
 if aba == "📊 Visão Geral":
