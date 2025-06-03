@@ -246,7 +246,7 @@ elif aba == "⚙️ Configurações":
             # Checagem robusta de linha válida
             if linha and isinstance(linha, int) and linha > 1:
                 try:
-                    sheet.delete_row(int(linha))
+                    sheet.delete_rows(int(linha))
                     st.success("Pedido excluído com sucesso!")
                     st.experimental_rerun()
                 except Exception as e:
