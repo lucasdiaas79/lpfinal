@@ -56,23 +56,7 @@ def visao_geral():
     col4.metric("📈 Lucro Estimado", f"R$ {lucro:,.2f}")
 
     st.markdown("---")
-    st.subheader("📊 Gráficos Interativos")
-
-    if 'tipo de material' in df.columns:
-        fig_mat = px.histogram(df, x='tipo de material', title='Volume por Tipo de Material')
-        st.plotly_chart(fig_mat, use_container_width=True)
-
-    if 'caçambeiro' in df.columns:
-        fig_cac = px.histogram(df, x='caçambeiro', title='Entregas por Caçambeiro')
-        st.plotly_chart(fig_cac, use_container_width=True)
-
-    df_pago = df[(df['pagamento material'] == 'sim') & (df['pagamento frete'] == 'sim')].copy()
-    if not df_pago.empty:
-        df_pago['lucro'] = df_pago['preço de venda'] - (df_pago['custo do material'] + df_pago['custo do frete'])
-        fig_lucro = px.bar(df_pago, x='cliente', y='lucro', title='Lucro por Cliente')
-        st.plotly_chart(fig_lucro, use_container_width=True)
-
-    st.markdown("---")
+    
     st.subheader("📋 Pedidos Recentes")
 
 # Execução da aba selecionada
@@ -132,6 +116,22 @@ elif aba == "💰 Financeiro":
 
 elif aba == "📈 Relatórios":
     st.subheader("📈 Relatórios com Filtros")
+
+    if 'tipo de material' in df.columns:
+        fig_mat = px.histogram(df, x='tipo de material', title='Volume por Tipo de Material')
+        st.plotly_chart(fig_mat, use_container_width=True)
+
+    if 'caçambeiro' in df.columns:
+        fig_cac = px.histogram(df, x='caçambeiro', title='Entregas por Caçambeiro')
+        st.plotly_chart(fig_cac, use_container_width=True)
+
+    df_pago = df[(df['pagamento material'] == 'sim') & (df['pagamento frete'] == 'sim')].copy()
+    if not df_pago.empty:
+        df_pago['lucro'] = df_pago['preço de venda'] - (df_pago['custo do material'] + df_pago['custo do frete'])
+        fig_lucro = px.bar(df_pago, x='cliente', y='lucro', title='Lucro por Cliente')
+        st.plotly_chart(fig_lucro, use_container_width=True)
+
+    st.markdown("---")
     filtro_entregue = st.selectbox("Filtrar por entrega", ["todos", "sim", "não"])
     filtro_pag_mat = st.selectbox("Filtrar por pagamento material", ["todos", "sim", "não"])
     filtro_pag_frete = st.selectbox("Filtrar por pagamento frete", ["todos", "sim", "não"])
