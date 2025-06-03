@@ -58,11 +58,13 @@ def visao_geral():
     col4.metric("📈 Lucro Estimado", f"R$ {lucro:,.2f}")
 
     st.markdown("---")
-    st.subheader("📋 Pedidos Recentes")
 
-    df_view = df[::-1].reset_index(drop=True)
-    for i, row in df_view.iterrows():
-        linha_sheet = len(df) - i + 1
+    st.subheader("📋 Pedidos Recentes")
+    if "confirm_delete" not in st.session_state:
+        st.session_state.confirm_delete = None
+
+    for row_num, (i, row) in enumerate(df[::-1].iterrows()):
+        linha_sheet = len(valores) - row_num
 
         with st.expander(f"👤 {row['cliente']}"):
             st.markdown(f"""
@@ -79,7 +81,7 @@ def visao_geral():
                 </div>
             """, unsafe_allow_html=True)
 
-            col1, col2, col3, col4 = st.columns([1, 1, 1, 2])
+            col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 2, 1])
             if col1.button("📦 Marcar como Entregue", key=f"ent_{i}"):
                 sheet.update_cell(linha_sheet, headers.index("entregue")+1, "sim")
                 st.success("Entrega atualizada.")
@@ -92,9 +94,19 @@ def visao_geral():
             if col4.button("💰 Cliente Pagou", key=f"cliente_{i}"):
                 sheet.update_cell(linha_sheet, headers.index("cliente pagou")+1, "sim")
                 st.success("Cliente marcado como totalmente quitado.")
+            if col5.button("🗑️ Excluir Pedido", key=f"excluir_{i}"):
+                sheet.delete_row(linha_sheet)
+                st.success("Pedido excluído com sucesso.")
+                st.experimental_rerun()
+
+            
+
+# Execução da aba selecionada
+if aba == "📊 Visão Geral":
+    visao_geral()
 
 # Aba: Novo Pedido
-def novo_pedido():
+elif aba == "📋 Novo Pedido":
     st.subheader("📋 Cadastro de Novo Pedido")
     with st.form("novo_pedido"):
         tipo_material = st.selectbox("Tipo de Material", [
@@ -123,11 +135,7 @@ def novo_pedido():
             sheet.append_row(novo)
             st.success("Pedido salvo com sucesso!")
 
-# Execução da aba selecionada
-if aba == "📊 Visão Geral":
-    visao_geral()
-elif aba == "📋 Novo Pedido":
-    novo_pedido()
+# Aba: Clientes
 elif aba == "👥 Clientes":
     st.subheader("👥 Relatório por Cliente")
     if 'cliente' in df.columns:
@@ -141,6 +149,8 @@ elif aba == "👥 Clientes":
             'entregue': 'Entregas Realizadas'
         })
         st.dataframe(clientes)
+
+# Aba: Financeiro
 elif aba == "💰 Financeiro":
     st.subheader("💰 Painel Financeiro")
     total_vendido = df["preço de venda"].sum()
@@ -150,6 +160,8 @@ elif aba == "💰 Financeiro":
     st.metric("Total Vendido", f"R$ {total_vendido:,.2f}")
     st.metric("Total Recebido", f"R$ {total_recebido:,.2f}")
     st.metric("Lucro Bruto", f"R$ {lucro_bruto:,.2f}")
+
+# Aba: Relatórios
 elif aba == "📈 Relatórios":
     st.subheader("📈 Relatórios com Filtros")
 
@@ -181,6 +193,8 @@ elif aba == "📈 Relatórios":
         df_filtrado = df_filtrado[df_filtrado["pagamento frete"] == filtro_pag_frete]
 
     st.dataframe(df_filtrado)
+
+# Aba: Configurações
 elif aba == "⚙️ Configurações":
     st.subheader("⚙️ Configurações do Sistema")
     if st.button("Zerar Planilha"):
