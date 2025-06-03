@@ -81,7 +81,7 @@ def visao_geral():
                 </div>
             """, unsafe_allow_html=True)
 
-            col1, col2, col3, col4, col5, col6 = st.columns([1, 1, 1, 2, 1, 1])
+            col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 2, 1])
             if col1.button("📦 Marcar como Entregue", key=f"ent_{i}"):
                 sheet.update_cell(linha_sheet, headers.index("entregue")+1, "sim")
                 st.success("Entrega atualizada.")
@@ -95,22 +95,11 @@ def visao_geral():
                 sheet.update_cell(linha_sheet, headers.index("cliente pagou")+1, "sim")
                 st.success("Cliente marcado como totalmente quitado.")
             if col5.button("🗑️ Excluir Pedido", key=f"excluir_{i}"):
-                st.session_state.confirm_delete = linha_sheet
-                st.session_state.confirm_delete = linha_sheet
+                sheet.delete_row(linha_sheet)
+                st.success("Pedido excluído com sucesso.")
+                st.experimental_rerun()
 
-            if col6.button("🗑️ Excluir Pedido", key=f"excluir2_{i}"):
-                st.session_state.confirm_delete = linha_sheet
-
-            if st.session_state.confirm_delete == linha_sheet:
-                st.warning(f"Deseja realmente excluir o pedido de {row['cliente']}?")
-                confirm_col1, confirm_col2 = st.columns([1, 1])
-                if confirm_col1.button("✅ Sim, excluir", key=f"confirm_{i}"):
-                    sheet.delete_row(linha_sheet)
-                    st.success("Pedido excluído com sucesso.")
-                    st.session_state.confirm_delete = None
-                    st.experimental_rerun()
-                if confirm_col2.button("❌ Cancelar", key=f"cancel_{i}"):
-                    st.session_state.confirm_delete = None
+            
 
 # Execução da aba selecionada
 if aba == "📊 Visão Geral":
