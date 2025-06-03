@@ -60,7 +60,7 @@ def visao_geral():
     st.markdown("---")
     
     st.subheader("📋 Pedidos Recentes")
-    for i, row in df.iterrows():
+    for i, row in df[::-1].iterrows():
         cor = "#fff5cc"
         alerta = ""
         if row["cliente pagou"] == "sim":
