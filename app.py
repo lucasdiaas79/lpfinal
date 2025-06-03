@@ -33,7 +33,7 @@ df.columns = [col.lower().strip() for col in df.columns]
 # Conversões e validações
 for col in ["custo do material", "custo do frete", "preço de venda"]:
     df[col] = pd.to_numeric(df.get(col, 0), errors="coerce")
-for col in ["pagamento material", "pagamento frete", "entregue"]:
+for col in ["pagamento material", "pagamento frete", "entregue", "cliente pagou"]:
     df[col] = df.get(col, "não").astype(str).str.lower()
 
 # Menu lateral
